@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador del Efecto Fotoeléctrico</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #f0f8ff, #e6e6fa);
+        }
+        .container {
+            padding: 20px;
+            max-width: 800px;
+            margin: auto;
+        }
+        canvas {
+            border: 1px solid #000;
+            margin-top: 20px;
+            background-color: #fff;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .output {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simulador del Efecto Fotoeléctrico Mejorado</h1>
+        <canvas id="simulationCanvas" width="600" height="300"></canvas>
+        <div class="controls">
+            <div class="label">
+                <label for="lightEnergy">Energía de la luz (eV): <span id="lightEnergyValue">2.5</span></label>
+                <input type="range" id="lightEnergy" min="0" max="5" step="0.1" value="2.5">
+            </div>
+            <div class="label">
+                <label for="workFunction">Función de trabajo (eV): <span id="workFunctionValue">3.0</span></label>
+                <input type="range" id="workFunction" min="0" max="5" step="0.1" value="3.0">
+            </div>
+        </div>
+        <div class="output">
+            <p id="outputText">Ajusta los parámetros para ver si se emiten electrones.</p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        const lightEnergySlider = document.getElementById('lightEnergy');
+        const workFunctionSlider = document.getElementById('workFunction');
+        const lightEnergyValue = document.getElementById('lightEnergyValue');
+        const workFunctionValue = document.getElementById('workFunctionValue');
+        const outputText = document.getElementById('outputText');
+
+        const electrons = [];
+        const MAX_ELECTRONS = 20;
+
+        const drawSimulation = (lightEnergy, workFunction) => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Dibujar fuente de luz
+            ctx.fillStyle = 'yellow';
+            ctx.beginPath();
+            ctx.arc(100, 150, 50, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = 'black';
+            ctx.font = '16px Arial';
+            ctx.fillText(`Luz (${lightEnergy.toFixed(1)} eV)`, 50, 220);
+
+            // Dibujar haz de luz
+            ctx.strokeStyle = 'rgba(255, 255, 0, 0.6)';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(100, 150);
+            ctx.lineTo(200, 150);
+            ctx.stroke();
+
+            // Dibujar material
+            ctx.fillStyle = 'gray';
+            ctx.fillRect(200, 100, 400, 100);
+            ctx.fillStyle = 'black';
+            ctx.fillText(`Material (${workFunction.toFixed(1)} eV)`, 300, 230);
+
+            // Verificar si hay emisión
+            if (lightEnergy > workFunction) {
+                if (electrons.length < MAX_ELECTRONS) {
+                    // Añadir nuevos electrones
+                    electrons.push({
+                        x: 250 + Math.random() * 300,
+                        y: 150 + Math.random() * 50 - 25,
+                        speedX: Math.random() * 2 + 1,
+                    });
+                }
+
+                outputText.textContent = '¡Se emiten electrones!';
+
+                // Dibujar electrones
+                ctx.fillStyle = 'blue';
+                electrons.forEach((electron, index) => {
+                    ctx.beginPath();
+                    ctx.arc(electron.x, electron.y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Actualizar posición
+                    electron.x += electron.speedX;
+
+                    // Eliminar electrones fuera de la pantalla
+                    if (electron.x > canvas.width) {
+                        electrons.splice(index, 1);
+                    }
+                });
+            } else {
+                outputText.textContent = 'No hay emisión de electrones.';
+                electrons.length = 0; // Vaciar electrones si no hay emisión
+            }
+        };
+
+        const updateSimulation = () => {
+            const lightEnergy = parseFloat(lightEnergySlider.value);
+            const workFunction = parseFloat(workFunctionSlider.value);
+
+            lightEnergyValue.textContent = lightEnergy.toFixed(1);
+            workFunctionValue.textContent = workFunction.toFixed(1);
+
+            drawSimulation(lightEnergy, workFunction);
+        };
+
+        // Animación continua
+        const animate = () => {
+            const lightEnergy = parseFloat(lightEnergySlider.value);
+            const workFunction = parseFloat(workFunctionSlider.value);
+            drawSimulation(lightEnergy, workFunction);
+            requestAnimationFrame(animate);
+        };
+
+        // Inicializar la simulación
+        lightEnergySlider.addEventListener('input', updateSimulation);
+        workFunctionSlider.addEventListener('input', updateSimulation);
+
+        animate(); // Iniciar animación
+    </script>
+</body>
+</html>
